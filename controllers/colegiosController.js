@@ -21,6 +21,27 @@ const getColegios = (req, res) => {
     });
 };
 
+const getNextId = (req, res) => {
+    const query = "SELECT Id FROM colegios ORDER BY Id DESC LIMIT 1";
+
+    db.query(query, (err, result) => {
+        if (err) {
+            // Manejo de errores
+            console.error("Error al obtener el ID del último colegio", err);
+            return res.status(500).json({ error: "Error interno del servidor" });
+        }
+
+        if (result.length > 0) {
+            // Envía el próximo ID como un objeto JSON
+            res.json({ nextId: result[0].Id + 1 });
+        } else {
+            // No hay colegios
+            res.status(404).json({ error: "No hay colegios" });
+        }
+    });
+};
+
+
 const createColegios = (req, res) => {
     const { Id, Nombre, Dirección, Teléfono } = req.body;
 
@@ -107,4 +128,5 @@ module.exports = {
     createColegios,
     updateColegios,
     deleteColegios,
+    getNextId
 };

@@ -99,7 +99,36 @@ const deleteProductoTerminado = (req, res) => {
     });
 };
 
+const obtenerExistenciaProductosDescontandoEncargados = async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                PT.Id AS IdProducto,
+                PT.Descripcion AS DescripcionProducto,
+                PT.PrecioVenta,
+                PT.Existencia - IFNULL(SUM(P.IdCliente), 0) AS ExistenciaDisponible
+            FROM
+                PRODUCTOS_TERMINADOS PT
+            LEFT JOIN
+                PEDIDOS P ON PT.Id = P.IdProductoTerminado AND P.Estado = 'En proceso'
+            GROUP BY
+                PT.Id, PT.Descripcion, PT.PrecioVenta, PT.Existencia;
+        `;
+
+        console.log("Consulta SQL:", query); // Imprimimos la consulta
+
+        const result = await db.promise().query(query);
+
+        res.json(result[0]);
+    } catch (error) {
+        console.error("Error al obtener la existencia de productos descontando los encargados", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+};
+
+
 module.exports = {
+    obtenerExistenciaProductosDescontandoEncargados,
     getProductosTerminados,
     createProductoTerminado,
     updateProductoTerminado,
